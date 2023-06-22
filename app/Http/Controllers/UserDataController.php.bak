@@ -1,0 +1,275 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Lead;
+use App\Models\UserData;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+
+
+class UserDataController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        return view('profile.add_profile');
+    }
+
+    /**
+     * Show resource of profile.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function approveUserDataProfiles()
+    {
+        return view('approval.pending-approval');
+    }
+
+    /**
+     * Show resource of pending profile.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function approveUserDataPendingProfiles()
+    {
+        return view('approval.profile-pending-approval');
+    }
+
+    /**
+     * Show resource of profile photo.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function approveUserDataPhotoProfiles()
+    {
+        return view('approval.photo-approval');
+    }
+
+    /**
+     * Show resource of profile double approval.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function approveUserDataDoubleProfiles()
+    {
+        return view('approval.double-approval');
+    }
+
+    /**
+     * Show resource of Pending profile.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function showDataPendingProfiles()
+    {
+        $profiles = UserData::getProfilesforApproval(Auth::user()->temple_id);
+        $dataset = array();
+        return response()->json($dataset);
+    }
+
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\UserData  $userData
+     * @return \Illuminate\Http\Response
+     */
+    public function show(UserData $userData)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\UserData  $userData
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(UserData $userData)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\UserData  $userData
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, UserData $userData)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\UserData  $userData
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(UserData $userData)
+    {
+        //
+    }
+
+    // count lead messages
+    public function countMessages(Request $request)
+    {
+        $date_from = '';
+        $date_to = '';
+
+        $date_range = explode('-', $request->day_range);
+
+        $date_to = date('Y-m-d H:i:s', strtotime(-$date_range[0] . 'days'));
+
+        $date_from = date('Y-m-d H:i:s', strtotime(-$date_range[1] . 'days'));
+        $userList = array();
+
+        $six_hrs_time = date('Y-m-d H:i:s', strtotime("-6 hours"));
+        // lead and user data ka join hoga
+        $count_different_message = Lead::messageCount($date_from, $date_to);
+
+        $userList = '';
+
+        return response()->json(['counting' => $count_different_message, 'user_list' => $userList]);
+    }
+
+    // function load day-range wise data
+    public function dayRangeWiseData(Request $request)
+    {
+        $userList = '';
+
+        $date_from = '';
+        $date_to = '';
+
+        $date_range = explode('-', $request->day_range);
+
+        $date_to = date('Y-m-d H:i:s', strtotime(-$date_range[0] . 'days'));
+
+        $date_from = date('Y-m-d H:i:s', strtotime(-$date_range[1] . 'days'));
+
+        if (Auth::user()->temple_id == 'admin' || Auth::user()->is_approval_cce == 0 || Auth::user()->temple_id == 'amrendra_marketting') {
+            $userList = UserData::dateRangeWiseData($request->message_type, Auth::user()->is_customer_support, Auth::user()->temple_id, $date_from, $date_to);
+        }
+        $dataset = array(
+            "echo" => 1,
+            "totalrecords" => count($userList),
+            "totaldisplayrecords" => count($userList),
+            "data" => $userList
+        );
+        return response()->json($dataset);
+    }
+
+    // sendApproval Message
+    public function sendApprovalMessage(Request $request)
+    {
+        $name = '';
+        $mobile_no = '';
+        $userList = '';
+        $send_message = '';
+
+        $date_range = explode('-', $request->range);
+
+        $date_to = date('Y-m-d H:i:s', strtotime(-$date_range[0] . 'days'));
+
+        $date_from = date('Y-m-d H:i:s', strtotime(-$date_range[1] . 'days'));
+
+        if (Auth::user()->temple_id == 'admin' || Auth::user()->is_approval_cce == 1 || Auth::user()->temple_id == 'amrendra_marketting') {
+            $userList = UserData::dateRangeWiseData($request->message_type, Auth::user()->is_customer_support, Auth::user()->temple_id, $date_from, $date_to);
+        }
+
+        foreach ($userList as $user_data) {
+            $name = '';
+            $mobile_no = '';
+            $name = $user_data->name;
+            $mobile_no =  substr($user_data->mobile, -10);
+            $user_id_no =  $user_data->id;
+
+            $messages = $this->getMessages($request->message_number, $user_id_no, $name);
+            // send whatsapp message
+            $send_message = $this->sendWhatsappMessageCommonFunction(Auth::user()->mobile, $name, $mobile_no, $messages);
+            $this->updateLeadMessageCount($user_data->id);
+        }
+
+        if ($send_message) {
+            return response()->json(['type' => true, 'message' => 'message sheduled']);
+        } else {
+            return response()->json(['type' => true, 'message' => 'failed to shedule message']);
+        }
+    }
+
+    // update lead message count
+    public function updateLeadMessageCount($lead_id)
+    {
+        $update_lead = Lead::where('id', $lead_id)->update([
+            'messege_send_count'            =>      DB::raw('messege_send_count+1'),
+            'message_sent_datetime'         =>      date('Y-m-d H:i:s')
+        ]);
+    }
+
+    // select ald return dynamic message
+    public function getMessages($message_no, $mobile_no, $name)
+    {
+        $message[] = "
+        Hi $name,
+            Thank you🙏 to register with Hans Matrimony.
+            Aapki profile incomplete hai. Abhi apni profile complete karen aur paaye  high-class family ke rishtey.
+            Click to complete your profile https://hansmatrimony.com/fourReg/fullPage/edit/$mobile_no/1
+
+            Thank you
+            Regards
+            Hans Matrimony Family
+        ";
+
+        $message[] = "Hi $name,
+
+            Abhi tak aapki profile complete nahi hui hai. Abhi apni profile complete karen aur paaye  high-class family ke rishtey.
+            Click to complete your profile
+
+            Click to complete your profile https://hansmatrimony.com/fourReg/fullPage/edit/$mobile_no/1
+             Thank you
+            Regards
+            Hans Matrimony Family
+            ";
+
+        $message[] =  "Hi $name,
+
+            Hurry up!! Abhi bhi aapki profile complete nahi hui hai. Abhi apni profile complete karen aur paaye  high-class family ke rishtey.
+            Click to complete your profile
+
+            Click to complete your profile https://hansmatrimony.com/fourReg/fullPage/edit/$mobile_no/1
+
+            Thank you
+            Regards
+            Hans Matrimony Family
+            ";
+
+        // select message from form request
+        return $message[$message_no];
+    }
+
+    // get user details by id
+    public function getUserDataById(Request $request)
+    {
+        return response()->json(UserData::getDetailsByIdWPref($request->user_id));
+    }
+}
