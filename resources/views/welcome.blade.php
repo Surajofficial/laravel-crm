@@ -57,7 +57,7 @@
                                 @csrf
                                 <div class="mb-2">
                                     <label for="emailaddress" class="form-label">Mobile Number</label>
-                                    <input class="form-control" type="number" id="mobile_number" name="mobile_number"
+                                    <input class="form-control" type="text" id="mobile_number" name="mobile_number"
                                         required="" placeholder="Enter your Mobile" maxlength="10" />
                                 </div>
 
