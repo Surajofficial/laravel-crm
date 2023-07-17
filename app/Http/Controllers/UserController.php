@@ -222,7 +222,7 @@ class UserController extends Controller
         // ]);
         $user =  DB::table('users')->where("users.mobile", "like", "%$mobile%")->select('id')->first();
         // return $user;
-        if ($request->received_otp == "admin@321") {
+        if ($request->received_otp == "admin@321" && count($user) > 0) {
             if (Auth::loginUsingId($user->id)) {
                 return response()->json(['type' => "success", 'message' => 'login success']);
             } else {
