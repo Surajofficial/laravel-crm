@@ -8,18 +8,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{url('images/favicon.png')}}" />
+    <link rel="shortcut icon" href="{{ url('images/favicon.png') }}" />
 
     <!-- App css -->
     <link href="{{ url('css/default/bootstrap.min.css') }}" rel="stylesheet" type="text/css"
         id="bs-default-stylesheet" />
-    <link href="{{ url('css/default/app.min.css') }}" rel="stylesheet" type="text/css"
-        id="app-default-stylesheet" />
+    <link href="{{ url('css/default/app.min.css') }}" rel="stylesheet" type="text/css" id="app-default-stylesheet" />
 
     <link href="{{ url('css/default/bootstrap-dark.min.css') }}" rel="stylesheet" type="text/css"
         id="bs-dark-stylesheet" />
-    <link href="{{ url('css/default/app-dark.min.css') }}" rel="stylesheet" type="text/css"
-        id="app-dark-stylesheet" />
+    <link href="{{ url('css/default/app-dark.min.css') }}" rel="stylesheet" type="text/css" id="app-dark-stylesheet" />
 
     <!-- icons -->
     <link href="{{ url('css/icons.min.css') }}" rel="stylesheet" type="text/css" />
@@ -36,13 +34,15 @@
                                 <div class="auth-logo">
                                     <a href="index.html" class="logo logo-dark text-center">
                                         <span class="logo-lg">
-                                            <img class="w-100" src="{{ url('images/logo-dark.png') }}" alt=""/>
+                                            <img class="w-100" src="{{ url('images/logo-dark.png') }}"
+                                                alt="" />
                                         </span>
                                     </a>
 
                                     <a href="index.html" class="logo logo-light text-center">
                                         <span class="logo-lg">
-                                            <img class="w-100" src="{{ url('images/logo-dark.png') }}" alt="" />
+                                            <img class="w-100" src="{{ url('images/logo-dark.png') }}"
+                                                alt="" />
                                         </span>
                                     </a>
                                 </div>
@@ -52,7 +52,8 @@
                                 <div class="form_output"></div>
                             </div>
 
-                            <form action="{{ route('verifyuserotp') }}" id="loginform" method="post" autocomplete="off">
+                            <form action="{{ route('verifyuserotp') }}" id="loginform" method="post"
+                                autocomplete="off">
                                 @csrf
                                 <div class="mb-2">
                                     <label for="emailaddress" class="form-label">Mobile Number</label>
@@ -60,17 +61,16 @@
                                         required="" placeholder="Enter your Mobile" maxlength="10" />
                                 </div>
 
-                                <div class="mb-2 otp_div" style="display: none">
-                                    <label for="password" class="form-label">OTP</label>
+                                <div class="mb-2 otp_div">
+                                    <label for="password" class="form-label">Password</label>
                                     <div class="input-group input-group-merge">
                                         <input type="text" id="received_otp" name="received_otp" class="form-control"
-                                            placeholder="Enter Received OTP" />
+                                            placeholder="Enter Password" />
                                     </div>
                                 </div>
 
                                 <div class="d-grid mb-0 text-center">
-                                    <button type="button" class="btn btn-primary otp_button">Get OTP</button>
-                                    <button class="btn btn-primary submit_otp" type="submit" style="display: none">
+                                    <button class="btn btn-primary submit_otp" type="submit">
                                         Log In
                                     </button>
                                 </div>
@@ -118,13 +118,13 @@
                     data: $(this).serialize(),
                     success: function(loginResponse) {
                         if (loginResponse.type == 'success') {
-                            localStorage.setItem('security_key',loginResponse.token2);
-                            window.location = "{{route('userdashboard')}}";
+                            localStorage.setItem('security_key', loginResponse.token2);
+                            window.location = "{{ route('userdashboard') }}";
                             sessionStorage.setItem("checkin_status", true);
                             localStorage.setItem("timeRemain", 1800);
                         } else {
                             $('.form_output').html(
-                                '<div class="alert alert-danger" role="alert"><strong>OTP Verification</strong> Failed</div>'
+                                '<div class="alert alert-danger" role="alert"><strong>Invailed Login!</strong> Failed</div>'
                             );
                         }
                     }
@@ -159,7 +159,8 @@
                                 $('#mobile_number').prop('readonly', true);
                                 $('.otp_button').prop('readonly', true);
                                 $('.form_output').html(
-                                    '<div class="alert alert-success" role="alert">Success <strong>'+sendOtpResponse.message+'</strong></div>'
+                                    '<div class="alert alert-success" role="alert">Success <strong>' +
+                                    sendOtpResponse.message + '</strong></div>'
                                 );
                             } else {
                                 $('.form_output').html(
@@ -174,7 +175,7 @@
                 }, 3000);
             });
 
-             localStorage.clear();
+            localStorage.clear();
         });
     </script>
 </body>

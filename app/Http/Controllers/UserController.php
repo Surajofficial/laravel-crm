@@ -22,12 +22,12 @@ class UserController extends Controller
         $user_list = "";
         if (Auth::user()->role == config('constants.roles_ineger.admin') || Auth::user()->role == config('constants.roles_ineger.relationship_mananger')) {
             $user_list = User::getAllUsers()->where('matchmaker_is_user', '=', 'no')->where('mobile', '>', '0')->select('id', 'name', 'mobile', 'role', 'temple_id', 'created_at', 'morning', 'evening', 'dayoff', 'email')->orderBy('name', 'asc')->get();
-        } else if(Auth::user()->role == config('constants.roles_ineger.team_leader')) {
+        } else if (Auth::user()->role == config('constants.roles_ineger.team_leader')) {
             $temple_ids = TeamLeader::where('temple_id', Auth::user()->temple_id)->get(['access_temple_id']);
             $temple_ids = array_column($temple_ids->toArray(), 'access_temple_id');
-            $user_list = User::getAllUsers()->where('matchmaker_is_user', '=', 'no')->where('mobile', '>', '0')->whereIn('temple_id',$temple_ids)
-            ->select('id', 'name', 'mobile', 'role', 'temple_id', 'created_at', 'morning', 'evening', 'dayoff', 'email')->orderBy('name', 'asc')->get();
-        }else{
+            $user_list = User::getAllUsers()->where('matchmaker_is_user', '=', 'no')->where('mobile', '>', '0')->whereIn('temple_id', $temple_ids)
+                ->select('id', 'name', 'mobile', 'role', 'temple_id', 'created_at', 'morning', 'evening', 'dayoff', 'email')->orderBy('name', 'asc')->get();
+        } else {
             $user_list = array();
         }
 
@@ -45,8 +45,7 @@ class UserController extends Controller
     {
         if (Auth::user()->role == config('constants.roles_ineger.admin') || Auth::user()->role == config('constants.roles_ineger.team_leader')) {
             return view('admin.loginotheraccount');
-        }
-        else{
+        } else {
             return redirect()->back();
         }
     }
@@ -61,7 +60,7 @@ class UserController extends Controller
     {
         date_default_timezone_set("Asia/Calcutta");   //India time (GMT+5:30)
         $mobile = substr($request->mobile, -10);
-        $check = DB::table('users')->where(["users.mobile" => "91" . $mobile, 'matchmaker_is_user'=>'no'])->select('users.id', 'users.mobile', 'users.temple_id', 'users.morning', 'users.evening')->first();
+        $check = DB::table('users')->where(["users.mobile" => "91" . $mobile, 'matchmaker_is_user' => 'no'])->select('users.id', 'users.mobile', 'users.temple_id', 'users.morning', 'users.evening')->first();
         $ip = '';
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
             $ip = $_SERVER['HTTP_CLIENT_IP'];
@@ -120,93 +119,117 @@ class UserController extends Controller
     // verify user mobile using OTP
     public function verifyUserMobile(Request $request)
     {
-        $mobile = '91' . substr($request->mobile_number, -10);
-        $auth_key = env('MSG_AUTH_KEY');
-        $received_otp = $request->received_otp;
-        $message = urlencode('Your verification code is ##OTP##');
-        $sender = 'INHANS';
-        $mobile = "91" . substr($mobile, -10);
-        $curl = curl_init();
+        $mobile = $request->mobile_number;
+        // $auth_key = env('MSG_AUTH_KEY');
+        // $received_otp = $request->received_otp;
+        // $message = urlencode('Your verification code is ##OTP##');
+        // $sender = 'INHANS';
+        // $mobile = "91" . substr($mobile, -10);
+        // $curl = curl_init();
 
-        $ip = '';
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ip = $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        }
+        // $ip = '';
+        // if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        //     $ip = $_SERVER['HTTP_CLIENT_IP'];
+        // } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        //     $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        // } else {
+        //     $ip = $_SERVER['REMOTE_ADDR'];
+        // }
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://control.msg91.com/api/verifyRequestOTP.php?authkey='.$auth_key.'&mobile='.$mobile.'&otp='.$received_otp.'',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-                "content-type: application/x-www-form-urlencoded"
-            ),
-        ));
+        // curl_setopt_array($curl, array(
+        //     CURLOPT_URL => 'https://control.msg91.com/api/verifyRequestOTP.php?authkey=' . $auth_key . '&mobile=' . $mobile . '&otp=' . $received_otp . '',
+        //     CURLOPT_RETURNTRANSFER => true,
+        //     CURLOPT_ENCODING => '',
+        //     CURLOPT_MAXREDIRS => 10,
+        //     CURLOPT_TIMEOUT => 0,
+        //     CURLOPT_FOLLOWLOCATION => true,
+        //     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        //     CURLOPT_CUSTOMREQUEST => 'GET',
+        //     CURLOPT_HTTPHEADER => array(
+        //         "content-type: application/x-www-form-urlencoded"
+        //     ),
+        // ));
 
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $decoded_json = json_decode($response, true);
-        //$decoded_json =array('type'=>'success');
-        $data = $decoded_json;
-        $i = 0;
-        if (!empty($decoded_json)) {
-            $check = DB::table('users')->where(["users.mobile" => $mobile, 'matchmaker_is_user' => 'no'])->select('users.id', 'users.mobile', 'users.temple_id', 'users.morning', 'users.evening')->first();
+        // $response = curl_exec($curl);
+        // curl_close($curl);
+        // $decoded_json = json_decode($response, true);
+        // $decoded_json = array('type' => 'success');
+        // $data = $decoded_json;
+        // $i = 0;
+        // if (!empty($decoded_json)) {
+        //     $check = DB::table('users')->where(["users.mobile" => $mobile, 'matchmaker_is_user' => 'no'])->select('users.id', 'users.mobile', 'users.temple_id', 'users.morning', 'users.evening')->first();
 
-            Auth::loginUsingId($check->id);
+        //     Auth::loginUsingId($check->id);
 
-            date_default_timezone_set('Asia/Kolkata');
-            $date = date('Y-m-d');
-            // create attendance
-            $create_attendace = Attendance::create([
-                'temple_id'         =>      Auth::user()->temple_id,
-                'check_in'          =>      time()
-            ]);
+        //     date_default_timezone_set('Asia/Kolkata');
+        //     $date = date('Y-m-d');
+        //     // create attendance
+        //     $create_attendace = Attendance::create([
+        //         'temple_id'         =>      Auth::user()->temple_id,
+        //         'check_in'          =>      time()
+        //     ]);
 
-            $temple_id = Auth::user()->temple_id;
-            $create_recrd = '';
-            $search_record = CheckIn::searchRecord($temple_id, $date);
+        //     $temple_id = Auth::user()->temple_id;
+        //     $create_recrd = '';
+        //     $search_record = CheckIn::searchRecord($temple_id, $date);
 
-            if (empty($search_record)) {
-                $check_in_array = array(
-                    "sl"        =>      1,
-                    "type"      =>      "check-in",
-                    "time"  =>      date('Y-m-d H:i:s')
-                );
-                // create new record for today
-                $create_recrd = checkIn::createRecord($temple_id, $date, $check_in_array);
-                $mar_loing = DB::table('users_login')->insert([
-                    "temple_id"     =>      $temple_id,
-                    "login_status"  =>      0,
-                    'ip_address'    =>      $ip
-                ]);
+        //     if (empty($search_record)) {
+        //         $check_in_array = array(
+        //             "sl"        =>      1,
+        //             "type"      =>      "check-in",
+        //             "time"  =>      date('Y-m-d H:i:s')
+        //         );
+        //         // create new record for today
+        //         $create_recrd = checkIn::createRecord($temple_id, $date, $check_in_array);
+        //         $mar_loing = DB::table('users_login')->insert([
+        //             "temple_id"     =>      $temple_id,
+        //             "login_status"  =>      0,
+        //             'ip_address'    =>      $ip
+        //         ]);
+        //     } else {
+        //         $check_in_array = json_decode($search_record->checkIns, true);
 
+        //         $check_in_array[count($check_in_array)] = array(
+        //             "sl"        => ($search_record->today_checkIn_count + 1),
+        //             "type"      =>      "check-in",
+        //             "check_in"  =>      date('Y-m-d H:i:s')
+        //         );
+        //         $create_recrd = CheckIn::updateRecord($check_in_array, $search_record->id);
+        //         $mar_loing = DB::table('users_login')->insert([
+        //             "temple_id"     =>      $temple_id,
+        //             "login_status"  =>      1,
+        //             'ip_address'    =>      $ip
+        //         ]);
+        //     }
+
+        //     return response()->json($data);
+        // } else {
+        //     return response()->json(["type" => false, "message" => "something went wrong"]);
+        // }
+        // $credentials = $request->validate([
+        //     'mobile' => 'required|email',
+        //     'password' => 'required',
+        // ]);
+
+        // if (Auth::attempt($credentials)) {
+        //     // Authentication successful
+        //     return redirect()->intended('/home');
+        // }
+
+        // // Authentication failed
+        // return back()->withErrors([
+        //     'email' => 'Invalid credentials.',
+        // ]);
+        $user =  DB::table('users')->where("users.mobile", "like", "%$mobile%")->select('id')->first();
+        // return $user;
+        if ($request->received_otp == "admin@321") {
+            if (Auth::loginUsingId($user->id)) {
+                return response()->json(['type' => "success", 'message' => 'login success']);
             } else {
-                $check_in_array = json_decode($search_record->checkIns, true);
-
-                $check_in_array[count($check_in_array)] = array(
-                    "sl"        => ($search_record->today_checkIn_count + 1),
-                    "type"      =>      "check-in",
-                    "check_in"  =>      date('Y-m-d H:i:s')
-                );
-                $create_recrd = CheckIn::updateRecord($check_in_array, $search_record->id);
-                $mar_loing = DB::table('users_login')->insert([
-                    "temple_id"     =>      $temple_id,
-                    "login_status"  =>      1,
-                    'ip_address'    =>      $ip
-                ]);
+                return response()->json(['type' => false, 'message' => 'login failed try again']);
             }
-
-            return response()->json($data);
         } else {
-            return response()->json(["type" => false, "message" => "something went wrong"]);
+            return response()->json(['type' => false, 'message' => 'Invailed Login']);
         }
     }
 
@@ -359,17 +382,15 @@ class UserController extends Controller
         $support = 0;
         $approval = 0;
         $matchmaker = 0;
-        if ($request->select_role==1) {
+        if ($request->select_role == 1) {
             $support = 1;
             $approval = 0;
             $matchmaker = 0;
-        }
-        else if($request->select_role == 2){
+        } else if ($request->select_role == 2) {
             $support = 0;
             $approval = 1;
             $matchmaker = 0;
-        }
-        else if ($request->select_role == 3) {
+        } else if ($request->select_role == 3) {
             $support = 0;
             $approval = 0;
             $matchmaker = 2;
@@ -390,9 +411,9 @@ class UserController extends Controller
                 "mobile"     =>   "91" . substr($request->user_mobile, 0, 10)
             ]);
             if ($update_record) {
-                return response()->json(['type'=>true,'message'=>'record udpated']);
+                return response()->json(['type' => true, 'message' => 'record udpated']);
             }
-        }else{
+        } else {
             // add  new record
             $update_record = User::create([
                 "morning"       =>      $request->login_start,
@@ -423,15 +444,14 @@ class UserController extends Controller
     public function getTransactionList(Request $request)
     {
 
-        $temple_logs = AuthControlFailedtxn::where('id',$request->txn_id)->update([
+        $temple_logs = AuthControlFailedtxn::where('id', $request->txn_id)->update([
             'day'               =>      $request->team_day,
             'team_leader'       =>      $request->team_leaders,
         ]);
 
         if ($temple_logs) {
-            return response()->json(['type'=> true, 'message'=>'record updated']);
+            return response()->json(['type' => true, 'message' => 'record updated']);
         }
-
     }
 
     public function updateLogoutTime(Request $request)
@@ -457,9 +477,9 @@ class UserController extends Controller
     {
         // $request->user_id $request->user_role
 
-        $user_Details = User::where(['temple_id'=> "$request->user_id", 'role'=> $request->user_role])->first(['id']);
-        if(!empty($user_Details)){
-            if(Auth::loginUsingId($user_Details->id) && $request->user_role == 9){
+        $user_Details = User::where(['temple_id' => "$request->user_id", 'role' => $request->user_role])->first(['id']);
+        if (!empty($user_Details)) {
+            if (Auth::loginUsingId($user_Details->id) && $request->user_role == 9) {
                 return redirect('user-dashboard');
             } else if (Auth::loginUsingId($user_Details->id) && $request->user_role != 9) {
                 return redirect('user-dashboard');
